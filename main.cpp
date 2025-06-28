@@ -1,239 +1,231 @@
 #include <iostream>
 #include <string>
+#include <fstream>
 #include "simpio.h"
-#include "vector.h"
-#include "console.h"
-#include <time.h>
-#include "allone.h"
 #include "random.h"
-#include "map.h"
-#include "queue.h"
+#include "console.h"
+#include "vector.h"
+#include <time.h>
+#include "lexicon.h"
+#include "shortest_path.h"
+#include "max_weight.h"
 
 
 using namespace std;
 
-void printTestResults(bool passed, int testNum, int& passedCounter) {
+void printTestResults(bool passed, int & testNum, int & passedCounter) {
+	testNum++;
 	if (passed) {
 		cout << "test " << testNum << " passed" << endl;
 		passedCounter++;
-	}
-	else {
+	} else {
 		cout << "test " << testNum << " failed" << endl;
 	}
 }
 
-string* generateStrings(int n) {
-	string* keys = new string[n];
-	for (int i = 1; i < n; i++) {
-		keys[i] = integerToString(i);
+void readGridFromFile(string fileName, Grid<int> &grid, int &answ) {
+	ifstream file;
+	file.open(fileName.c_str());
+	int n, m;
+	file >> n >> m >>  answ;
+	grid.resize(n, m);
+	for (int i=0; i<n; i++) {
+		for (int j=0; j<m; j++) {
+			file >> grid[i][j];
+		}
 	}
-	return keys;
-}
-const int n = 1000;
-string* keys = generateStrings(n);
-
-const int AllOneTestsNum = 30;
-
-bool runAllOneSingleTest(int testNum) {
-	bool passed = false;
-	AllOne ao;
-	switch (testNum) {
-	case 1:
-		passed = ao.getMaxKey() == "" && ao.getMinKey() == "";
-		break;
-	case 2:
-		ao.inc("a");
-		ao.inc("b");
-		ao.inc("c");
-		ao.inc("b");
-		passed = ao.getMaxKey() == "b" && (ao.getMinKey() == "a" || ao.getMinKey() == "c");
-		break;
-	case 3:
-		ao.inc("a");
-		ao.inc("b");
-		ao.inc("c");
-		ao.inc("b");
-		ao.inc("a");
-		ao.inc("a");
-		passed = ao.getMaxKey() == "a" && ao.getMinKey() == "c";
-		break;
-	case 4:
-		ao.inc("a");
-		ao.inc("b");
-		ao.inc("a");
-		ao.inc("d");
-		ao.inc("b");
-		ao.inc("b");
-		passed = ao.getMaxKey() == "b" && ao.getMinKey() == "d";
-		ao.inc("d");
-		ao.inc("d");
-		ao.inc("d");
-		ao.inc("d");
-		passed = passed && ao.getMaxKey() == "d" && ao.getMinKey() == "a";
-		break;
-	case 5:
-		passed = true;
-		for (int i = 1; i < 10; i++) {
-			for (int k = 0; k < i; k++) {
-				ao.inc(integerToString(i));
-			}
-			passed = passed && ao.getMaxKey() == integerToString(i) && ao.getMinKey() == "1";
-		}
-		for (int i = 0; i < 10; i++) {
-			ao.inc("1");
-		}
-		passed = passed && ao.getMaxKey() == "1" && ao.getMinKey() == "2";
-		for (int i = 0; i < 5; i++) {
-			ao.inc("7");
-			ao.inc("2");
-		}
-		passed = passed && ao.getMaxKey() == "7" && ao.getMinKey() == "3";
-		break;
-	case 6:
-		ao.inc("a");
-		ao.inc("b");
-		ao.inc("a");
-		ao.inc("c");
-		ao.inc("b");
-		ao.inc("b");
-		passed = ao.getMaxKey() == "b" && ao.getMinKey() == "c";
-		ao.inc("a");
-		ao.inc("a");
-		passed = passed && ao.getMaxKey() == "a" && ao.getMinKey() == "c";
-		ao.dec("a");
-		ao.dec("a");
-		ao.dec("a");
-		ao.dec("a");
-		passed = passed && ao.getMaxKey() == "b" && ao.getMinKey() == "c";
-		ao.dec("c");
-		passed = passed && ao.getMaxKey() == "b" && ao.getMinKey() == "b";
-		ao.dec("b");
-		ao.dec("b");
-		ao.dec("b");
-		passed = passed && ao.getMaxKey() == "" && ao.getMinKey() == "";
-		break;
-	case 7:
-		ao.inc("a");
-		ao.inc("b");
-		ao.inc("c");
-		ao.inc("d");
-		ao.inc("a");
-		ao.inc("a");
-		ao.inc("b");
-		ao.inc("b");
-		ao.inc("c");
-		ao.inc("c");
-		ao.dec("a");
-		passed = (ao.getMaxKey() == "b" || ao.getMaxKey() == "c") && ao.getMinKey() == "d";
-		ao.dec("a");
-		ao.dec("b");
-		ao.dec("c");
-		ao.dec("c");
-		ao.dec("d");
-		ao.dec("a");
-		passed = passed && ao.getMaxKey() == "b" && ao.getMinKey() == "c";		
-		break;
-		ao.dec("a");
-	case 8:
-		passed = true;
-		for (int i = 1; i < 10; i++) {
-			for (int k = 0; k < i; k++) {
-				ao.inc(integerToString(i));
-			}
-			passed = passed && ao.getMaxKey() == integerToString(i);
-			passed = passed && (i > 1 || ao.getMinKey() == integerToString(i-1));
-		}
-		passed = ao.getMaxKey() == "9" && ao.getMinKey() == "1";
-
-		for (int i = 9; i > 1; i--) {
-			for (int k = 0; k < i; k++) {
-				ao.dec(integerToString(i));
-			}
-			passed = passed && ao.getMaxKey() == integerToString(i-1) && ao.getMinKey() == "1";
-		}
-		ao.dec("1");
-		passed = passed && ao.getMaxKey() == "" && ao.getMinKey() == "";
-		break;
-	case 9:
-	case 10:
-	case 11:
-	case 12:
-	case 13:
-	case 14:
-	case 15:
-	case 16:
-	case 17:
-	case 18:
-	case 19:
-	case 20:
-		for (int i = 1; i < n; i++) {
-			ao.inc(keys[i]);
-		}
-		passed = true;
-
-		for (int i = 1; i < n; i++) {
-			for (int k = 0; k < i; k++) {
-				ao.inc(keys[i]);
-			}
-			passed = passed && ao.getMaxKey() == keys[i];
-		}
-		for (int i = 1; i < n-1; i++) {
-			for (int k = 0; k < n-1; k++)
-			ao.inc(keys[i]);
-			passed = passed && ao.getMaxKey() == keys[i] && ao.getMinKey() == keys[i+1];
-		}
-		break;
-	case 21:
-	case 22:
-	case 23:
-	case 24:
-	case 25:
-	case 26:
-	case 27:
-	case 28:
-	case 29:
-	case 30:
-		for (int i = 1; i < n; i++) {
-			ao.inc(integerToString(i));
-		}
-		passed = true;
-
-		for (int i = 1; i < n; i++) {
-			for (int k = 0; k < i; k++) {
-				ao.inc(keys[i]);
-			}
-			passed = passed && ao.getMaxKey() == keys[i];
-		}
-
-		for (int i = n-1; i > 1; i--) {
-			for (int k = 0; k < i; k++) {
-				ao.inc(keys[i]);
-			}
-			passed = passed && ao.getMaxKey() == keys[i-1];
-		}
-
-		passed = passed && ao.getMinKey() == "1";
-		break;
-	}
-
-	return passed;
+	file.close();
 }
 
-void runAllOneAllTests() {
-	cout << "### Run AllOne tests ###" << endl;
-	int passedNum = 0;
-	int testNum = 1;
+void writeWeightsTestToFile(string fileName, Vector<int> &weights, 
+								  Vector<int> &items, int answ) {
+	ofstream file;
+	file.open(fileName.c_str());
+	file << weights.size() << " " << items.size() << " " << answ << endl;
+	for (int i=0; i<weights.size(); i++) {
+		file << weights[i] << " ";
+	}
+	file << endl;
+	for (int i=0; i<items.size(); i++) {
+		file << items[i] << " ";
+	}
+	file << endl;
 
-	for (; testNum <= AllOneTestsNum; testNum++) {
-		bool passed = runAllOneSingleTest(testNum);
-		printTestResults(passed, testNum, passedNum);
+	file.close();
+}
+
+void generateWightsTests() {
+	for (int i=1; i<=50; i++) {
+		Vector<int> weights;
+		Vector<int> items;
+		string name = "weights\\test" + integerToString(i) + ".txt"; 
+		int numWeights = randomInteger(7, 10);
+		int numItems = randomInteger(7, 15);
+		for (int i=0; i<numWeights; i++) {
+			weights.add(randomInteger(1, 80));	
+		}
+		for (int i=0; i<numItems; i++) {
+			items.add(randomInteger(1, 500));	
+		}
+		int res = maxWeight(weights, items);
+		writeWeightsTestToFile(name, weights, items, res);
+	}
+}
+
+void readWeightsTestFromFile(string fileName, Vector<int> &weights, 
+								  Vector<int> &items, int &answ) {
+	ifstream file;
+	file.open(fileName.c_str());
+	int numWeights, numItems;
+	file >> numWeights >> numItems >> answ;
+	for (int i=0; i<numWeights; i++) {
+		int w;
+		file >> w;
+		weights.add(w);
+	}
+	for (int i=0; i<numItems; i++) {
+		int w;
+		file >> w;
+		items.add(w);
 	}
 
-	cout << "###### passed " << passedNum << " tests ######" << endl;
+	file.close();
+}
+void writeShortestPathTestToFile(string fileName, Grid<int> &table, int answ) {
+	ofstream file;
+	file.open(fileName.c_str());
+	file << table.numRows() << " " << table.numCols() << " " << answ << endl;
+
+	for (int row=0; row<table.numRows(); row++) {
+		for (int col=0; col<table.numCols(); col++) {
+			file << table[row][col] << " ";
+		}	
+		file << endl;
+	}
+	file.close();
+}
+
+void runShortestPathTests() {
+	cout << "Run Shortest Path tests" << endl;
+	int testNum = 0;
+	int passedCounter = 0;
+	bool passed;
+	int num = 50;
+	Grid<int> table;
+	int answ;
+	for (int i=1; i<=num; i++) {
+		readGridFromFile("path\\test" + integerToString(i) + ".txt", table, answ);
+		int res = getShortestPath(table);
+		cout << res << " " << answ << endl;
+		printTestResults(res == answ, testNum, passedCounter);
+	}
+
+	cout << "###### passed " << passedCounter << " tests ######" << endl;
+}
+
+void runMaxWeightRandomTests() {
+	cout << "Run Max Weights tests" << endl;
+	int testNum = 0;
+	int passedCounter = 0;
+	for (int i=1; i<=60; i++) {
+		Vector<int> weights;
+		Vector<int> items;
+		int answ;
+		string name = "weights\\test (" + integerToString(i) + ").txt"; 
+		readWeightsTestFromFile(name, weights, items, answ);
+		int res = maxWeight(weights, items);
+		printTestResults(res == answ, testNum, passedCounter);
+	}
+	cout << "###### passed " << passedCounter << " tests ######" << endl;
+}
+
+
+void runMaxWeightManualTests() {
+	int testNum = 0;
+	int passedCounter = 0;
+	bool passed;
+	Vector<int> weights;
+	Vector<int> items;
+	int res;
+
+	weights += 3, 5;
+	items += 3,5,7,8;
+	res = maxWeight(weights, items);
+	printTestResults(res == 13, testNum, passedCounter);
+
+	weights.clear();
+	items.clear();
+	weights += 1, 1, 1, 7;
+	items += 3, 3, 12;
+	res = maxWeight(weights, items);
+	printTestResults(res == 15, testNum, passedCounter);
+
+	weights.clear();
+	items.clear();
+	weights += 1, 1, 1, 7, 8;
+	items += 3, 3, 12, 17;
+	res = maxWeight(weights, items);
+	printTestResults(res == 29, testNum, passedCounter);
+
+	weights.clear();
+	items.clear();
+	weights += 1, 1, 1, 7, 8;
+	items += 25, 20, 45, 60, 60;
+	res = maxWeight(weights, items);
+	printTestResults(res == 0, testNum, passedCounter);
+
+	weights.clear();
+	items.clear();
+	weights += 3, 10, 4;
+	items += 1, 9, 20;
+	res = maxWeight(weights, items);
+	printTestResults(res == 29, testNum, passedCounter);
+
+	weights.clear();
+	items.clear();
+	weights += 3, 5;
+	items += 3,5,6,8;
+	res = maxWeight(weights, items);
+	printTestResults(res == 14, testNum, passedCounter);
+
+	weights.clear();
+	items.clear();
+	weights += 3, 5, 29;
+	items += 3,5,6,8,31,47,52,100;
+	res = maxWeight(weights, items);
+	printTestResults(res == 83, testNum, passedCounter);
+
+	weights.clear();
+	items.clear();
+	weights += 3,5,29,70,35,30,10;
+	items += 3,5,6,8,31,47,52,100;
+	res = maxWeight(weights, items);
+	printTestResults(res == 152, testNum, passedCounter);
+
+	weights.clear();
+	items.clear();
+	weights += 3,5,29,35,30,10;
+	items += 3,5,6,8,31,47,52,152,350;
+	res = maxWeight(weights, items);
+	printTestResults(res == 99, testNum, passedCounter);
+
+	weights.clear();
+	items.clear();
+	weights += 1,13,5,29,35,30,10,100,98,198,298;
+	items += 6,8,31,47,52,152,350,1800,500,400;
+	res = maxWeight(weights, items);
+	printTestResults(res == 900, testNum, passedCounter);
+
+	cout << "###### passed " << passedCounter << " tests ######" << endl;
 }
 
 int main() {
-	runAllOneAllTests();
-	cout << "end" << endl;
+	setRandomSeed(0);
+	//generateWightsTests();
+	runMaxWeightRandomTests();
+	//runMaxWeightManualTests();
+
+	//generateShortestPathTests();
+	//runShortestPathTests();
 	return 0;
 }
