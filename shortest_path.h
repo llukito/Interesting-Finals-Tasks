@@ -1,4 +1,4 @@
 #include "grid.h"
 
 
-int getShortestPath(Grid<int> &table); 
+int getShortestPath(Grid<int>& table);

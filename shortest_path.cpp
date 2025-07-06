@@ -2,86 +2,76 @@
 #include "queue.h"
 #include "set.h"
 #include "grid.h"
-#include "unordered_set"
+#include "vector"
 
-int getShortestPath(Grid<int> &table) {
-	if (table.numRows() == 1 && table.numCols() == 1)return 0;
-	int res = INT_MAX;
-	Queue<pair<pair<int,int>, pair<int,int>>> q;
-	unordered_set<int> visited;
-	visited.insert(0);
-	if (1 < table.numCols()) {
-		if (table[0][1] > table[0][0]) {
-			visited.insert(1);
-			q.enqueue({ {0,1},{1,1} });
-		}
-		else if (table[0][1] < table[0][0]) {
-			visited.insert(1);
-			q.enqueue({ {0,1},{-1,1}});
-		}
-	}
-	if (1 < table.numRows()) {
+int getShortestPath(Grid<int>& table) {
+	if (table.numRows() <= 1 && table.numCols() <= 1)return 0;
+	Queue<tuple<int,int, int>> q;
+	if (table.numRows() > 1) {
 		if (table[1][0] > table[0][0]) {
-			visited.insert(table.numCols());
-			q.enqueue({ {1,0},{1,1} });
+			q.enqueue({ 1,0,1 });
 		}
 		else if (table[1][0] < table[0][0]) {
-			visited.insert(table.numCols());
-			q.enqueue({ {1,0},{-1,1}});
+			q.enqueue({ 1,0,-1 });
 		}
 	}
+	if (table.numCols() > 1) {
+		if (table[0][1] > table[0][0]) {
+			q.enqueue({ 0,1,1 });
+		}
+		else if (table[0][1] < table[0][0]) {
+			q.enqueue({ 0,1,-1 });
+		}
+	}
+	int res = 1;
+	vector<vector<bool>> visited(table.numRows(), vector<bool>(table.numCols(), false));
+	visited[0][0] = true;
 	while (!q.isEmpty()) {
-		pair<pair<int, int>, pair<int,int>> pr = q.dequeue();
-		int r = pr.first.first; int c = pr.first.second;
-		int inc = pr.second.first; int length = pr.second.second;
-		if (r == table.numRows()-1 && c == table.numCols()-1) {
-			return length;
-		}
-		// right
-		if (c + 1 < table.numCols() && !visited.count(r * table.numCols() + c + 1)) {
-			if (table[r][c + 1] > table[r][c]) {
-				if (inc == 1) {
-					visited.insert(r * table.numCols() + c + 1);
-					q.enqueue({ {r,c + 1}, {inc, length + 1} });
+		int size = q.size();
+		for (int i = 0; i < size; i++) {
+			auto tup = q.dequeue();
+			int row = get<0>(tup); int col = get<1>(tup); int dir = get<2>(tup);
+			if (visited[row][col])continue;
+			visited[row][col] = true;
+			if (row == table.numRows() - 1 && col == table.numCols() - 1)return res;
+			if (row + 1 < table.numRows()) {
+				if (dir == 1) {
+					if (table[row + 1][col] > table[row][col]) {
+						q.enqueue({ row + 1, col, 1 });
+					}
+				}
+				else {
+					if (table[row + 1][col] < table[row][col]) {
+						q.enqueue({ row + 1, col, -1 });
+					}
 				}
 			}
-			else if (table[r][c + 1] < table[r][c]) {
-				if (inc == -1) {
-					visited.insert(r * table.numCols() + c + 1);
-					q.enqueue({ {r,c + 1}, {inc, length + 1} });
+			if (col + 1 < table.numCols()) {
+				if (dir == 1) {
+					if (table[row][col+1] > table[row][col]) {
+						q.enqueue({ row, col+1, 1 });
+					}
+				}
+				else {
+					if (table[row][col+1] < table[row][col]) {
+						q.enqueue({ row, col+1, -1 });
+					}
 				}
 			}
-		}
-		// left
-		if (c - 1 >= 0 && !visited.count(r * table.numCols() + c - 1)) {
-			if (table[r][c - 1] > table[r][c]) {
-				if (inc == 1) {
-					visited.insert(r * table.numCols() + c - 1);
-					q.enqueue({ {r,c - 1}, {inc, length + 1} });
+			if (col - 1 >=0) {
+				if (dir == 1) {
+					if (table[row][col - 1] > table[row][col]) {
+						q.enqueue({ row, col - 1, 1 });
+					}
 				}
-			}
-			else if (table[r][c - 1] < table[r][c]) {
-				if (inc == -1) {
-					visited.insert(r * table.numCols() + c - 1);
-					q.enqueue({ {r,c - 1}, {inc, length + 1} });
-				}
-			}
-		}
-		// down
-		if (r + 1 < table.numRows() && !visited.count((r + 1) * table.numCols() + c)) {
-			if (table[r+1][c] > table[r][c]) {
-				if (inc == 1) {
-					visited.insert((r+1) * table.numCols() + c );
-					q.enqueue({ {r+1,c}, {inc, length + 1} });
-				}
-			}
-			else if (table[r+1][c] < table[r][c]) {
-				if (inc == -1) {
-					visited.insert((r+1) * table.numCols() + c);
-					q.enqueue({ {r+1,c}, {inc, length + 1} });
+				else {
+					if (table[row][col - 1] < table[row][col]) {
+						q.enqueue({ row, col - 1, -1 });
+					}
 				}
 			}
 		}
+		res++;
 	}
-	return  res != INT_MAX ? res : -1;
+	return -1;
 }
