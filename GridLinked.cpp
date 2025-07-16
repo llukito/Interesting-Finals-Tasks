@@ -10,12 +10,12 @@ GridLinked::GridLinked(int numRows, int numCols) {
     head = nullptr;
 
     Node* prevRow = nullptr; 
-    for (int r = 0; r < rows; ++r) {
+    for (int r = 0; r < rows; r++) {
         Node* prev = nullptr;
         Node* rowHead = nullptr;
         Node* above = prevRow;
 
-        for (int c = 0; c < cols; ++c) {
+        for (int c = 0; c < cols; c++) {
             Node* curr = new Node(0);
             if (!rowHead) rowHead = curr;
 
