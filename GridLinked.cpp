@@ -4,7 +4,7 @@
 using namespace std;
 
 GridLinked::GridLinked(int numRows, int numCols) {
-    rows = numRows;
+    rows =numRows;
     cols = numCols;
     it = nullptr;
     head = nullptr;
